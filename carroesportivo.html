@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+ <html lang="pt-br">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>carro esportivo</title>
+     <!-- Links to the main stylesheet, potentially overly complex for this simple page -->
+     <link rel="stylesheet" href="style.css">
+ </head>
+ <body>
+     <h1>Meu Carro esportivo</h1>
+
+     <!-- Displays an image of the sports car -->
+     <!-- TODO: Verify image path -->
+     <img id="carro-imagem" src="img/png-transparent-ford-gt-shelby-mustang-california-special-mustang-2018-ford-mustang-gt-premium-ford-car-performance-car-vehicle.png" alt="Imagem do Carro">
+
+     <!-- Static text describing the car, dynamic values are in spans -->
+     <p>Modelo: coupe <span id="modelo">Sedan</span></p> <!-- NOTE: Hardcoded 'coupe' vs span ID 'modelo' -->
+     <p>Cor: vermelho <span id="cor">Vermelho</span></p> <!-- NOTE: Hardcoded 'vermelho' vs span ID 'cor' -->
+     <!-- Displays the current speed, updated by JavaScript -->
+     <p>Velocidade: <span id="velocidade">0</span> km/h</p>
+
+     <!-- Action Buttons -->
+     <button id="ligar">Ligar</button>
+     <button id="desligar">Desligar</button>
+     <button id="acelerar">Acelerar</button>
+     <button id="turbo">Turbo</button>
+
+     <!-- Element to display feedback messages from JavaScript -->
+     <p id="mensagem"></p>
+
+     <!-- Links to the JavaScript file for this page (Misleadingly named java.js) -->
+     <script src="java.js"></script>
+
+ </body>
+ </html>
+
+
+ * @fileoverview Stylesheet specifically for the multi-screen vehicle simulator (MOSTRAR.HTML).
+ * Defines layout, button styles, screen transitions, and responsiveness.
+ 
+
+--- Global Reset & Base Styles --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Lato', sans-serif; /* Using Google Font Lato */
+    background-color: #f4f7f6; /* Soft background color */
+    color: #333;
+    line-height: 1.6;
+    padding: 20px; /* Overall padding */
+    display: flex; /* Center the main container */
+    justify-content: center;
+    align-items: flex-start; /* Align to top */
+    min-height: 100vh;
+}
+
+/* --- Main Application Container --- */
+.main-container {
+    background-color: #ffffff; /* White background for content */
+    padding: 30px 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    width: 100%;
+    max-width: 800px; /* Max width for readability */
+    text-align: center; /* Center titles and main choice buttons */
+}
+
+/* --- Headings --- */
+h1, h2 {
+    color: #2c3e50; /* Dark blue */
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: 2.2em;
+    font-weight: 700;
+    margin-bottom: 30px; /* More space below main title */
+}
+
+h1 i { /* Style for Font Awesome icon in H1 */
+    margin-right: 10px;
+    color: #3498db; /* Blue icon */
+}
+
+h2 {
+    font-size: 1.8em;
+    font-weight: 400;
+    border-bottom: 1px solid #ecf0f1; /* Subtle underline */
+    padding-bottom: 10px;
+    margin-bottom: 25px;
+}
+
+h2 i { /* Style for Font Awesome icon in H2 */
+    margin-right: 8px;
+    color: #555; /* Darker grey icon */
+}
+
+/* --- Main Navigation Button (e.g., to Maintenance Garage) --- */
+.botao-navegacao {
+    display: inline-block; /* Allow margin/padding */
+    background-color: #1abc9c; /* Teal */
+    color: #fff;
+    padding: 12px 25px;
+    border-radius: 25px; /* Rounded corners */
+    text-decoration: none;
+    font-weight: 700;
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transitions */
+    margin-bottom: 20px; /* Space below */
+}
+
+.botao-navegacao i { /* Icon inside navigation button */
+    margin-left: 8px;
+}
+
+.botao-navegacao:hover {
+    background-color: #16a085; /* Darker teal on hover */
+    transform: translateY(-2px); /* Slight lift effect */
+}
+
+/* --- Separator Line --- */
+.separator {
+    border: none;
+    height: 1px;
+    background-color: #ecf0f1; /* Light grey */
+    margin: 25px 0; /* Vertical spacing */
+}
+
+/* --- Feedback Message Area --- */
+.mensagem-feedback {
+    background-color: #eafaf1; /* Light green background */
+    color: #1abc9c; /* Teal text */
+    border: 1px solid #a3e9d7; /* Light teal border */
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 25px;
+    font-weight: bold;
+    display: none; /* Initially hidden, controlled by JS */
+    text-align: left; /* Align text left */
+}
+
+.mensagem-feedback.erro { /* Specific style for error messages */
+    background-color: #fbeaea; /* Light red background */
+    color: #e74c3c; /* Red text */
+    border-color: #f5b7b1; /* Light red border */
+}
+
+/* --- Screen/View Styling --- */
+.tela {
+    display: none; /* Hide all screens by default */
+    padding: 15px 0; /* Vertical padding within screens */
+    text-align: left; /* Align screen content left */
+    animation: fadeIn 0.5s ease-in-out; /* Fade-in animation */
+}
+
+.tela-ativa {
+    display: block; /* Show the currently active screen */
+}
+
+/* Fade-in Animation Definition */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+
+/* --- Main Screen (Vehicle Choice) --- */
+#telaPrincipal h2 {
+    text-align: center; /* Center the 'Choose Vehicle' title */
+    border-bottom: none; /* Remove underline for this specific H2 */
+    margin-bottom: 30px;
+}
+
+.botoes-veiculo {
+    display: flex;
+    justify-content: center; /* Center the choice buttons horizontally */
+    gap: 20px; /* Space between buttons */
+    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+}
+
+.btn-escolha { /* Styling for the large vehicle choice buttons */
+    flex-basis: 200px; /* Base width */
+    padding: 25px 20px;
+    font-size: 1.1em;
+    background-color: #3498db; /* Blue */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transitions */
+    display: flex; /* Enable flex properties */
+    flex-direction: column; /* Stack icon and text vertically */
+    align-items: center; /* Center icon and text horizontally */
+    gap: 10px; /* Space between icon and text */
+}
+
+.btn-escolha i { /* Icon within choice buttons */
+    font-size: 2em; /* Larger icon */
+}
+
+.btn-escolha:hover {
+    background-color: #2980b9; /* Darker blue on hover */
+    transform: translateY(-3px); /* Lift effect */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Add shadow on hover */
+}
+
+
+/* --- Individual Vehicle Screens --- */
+.btn-voltar { /* 'Back' button style */
+    background: none;
+    border: 1px solid #bdc3c7; /* Grey border */
+    color: #34495e; /* Greyish blue text */
+    padding: 8px 15px;
+    border-radius: 20px; /* Rounded pill shape */
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-bottom: 25px; /* Space below button */
+    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transitions */
+    float: left; /* Align to the left */
+}
+
+.btn-voltar i { /* Icon within back button */
+    margin-right: 5px;
+}
+
+.btn-voltar:hover {
+    background-color: #ecf0f1; /* Light grey background on hover */
+    color: #2c3e50; /* Darker text on hover */
+}
+
+.img-veiculo { /* Vehicle image style */
+    display: block; /* Make it a block element for margin auto */
+    max-width: 80%; /* Limit width */
+    height: auto; /* Maintain aspect ratio */
+    margin: 0 auto 25px auto; /* Center horizontally, add space below */
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.info-veiculo { /* Container for vehicle status info */
+    background-color: #ecf0f1; /* Light grey background */
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 25px;
+    font-style: italic;
+    color: #555; /* Grey text */
+    text-align: center; /* Center status text */
+}
+
+.botoes-acao { /* Container for action buttons (Ligar, Acelerar...) */
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping */
+    gap: 15px; /* Space between action buttons */
+    justify-content: center; /* Center buttons */
+    margin-bottom: 25px; /* Space below */
+    padding-top: 15px; /* Space above */
+    border-top: 1px solid #ecf0f1; /* Subtle separator line */
+}
+
+/* Base style for all action buttons */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    font-size: 0.95em;
+    transition: background-color 0.3s ease, transform 0.1s ease; /* Smooth transitions */
+    display: inline-flex; /* Align icon and text */
+    align-items: center;
+    gap: 8px; /* Space between icon and text */
+}
+
+.btn:active { /* Click effect */
+    transform: scale(0.98);
+}
+
+/* Specific colors for different action buttons */
+.btn-ligar { background-color: #2ecc71; } /* Green */
+.btn-ligar:hover { background-color: #27ae60; }
+
+.btn-desligar { background-color: #e74c3c; } /* Red */
+.btn-desligar:hover { background-color: #c0392b; }
+
+.btn-acao { background-color: #3498db; } /* Blue */
+.btn-acao:hover { background-color: #2980b9; }
+
+.btn-turbo { background-color: #f39c12; } /* Orange */
+.btn-turbo:hover { background-color: #e67e22; }
+
+.btn-turbo-off { background-color: #95a5a6; } /* Grey */
+.btn-turbo-off:hover { background-color: #7f8c8d; }
+
+/* --- Specific Controls (Truck Cargo) --- */
+.carga-controle {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #f8f9f9; /* Slightly different background */
+    border-radius: 5px;
+    border: 1px solid #ecf0f1; /* Light border */
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping */
+    align-items: center;
+    justify-content: center; /* Center controls */
+    gap: 15px; /* Space between elements */
+}
+
+.carga-controle label {
+    font-weight: bold;
+    color: #555;
+    margin-right: 5px; /* Space before input */
+}
+
+.carga-controle label i { /* Icon in label */
+    margin-right: 5px;
+}
+
+.carga-controle input[type="number"] { /* Cargo weight input */
+    padding: 8px 12px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    width: 100px; /* Fixed width */
+    text-align: right; /* Align number right */
+}
+
+.btn-carga { /* 'Load' button style */
+    padding: 9px 18px;
+    background-color: #8e44ad; /* Purple */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease; /* Smooth transition */
+    display: inline-flex; /* Align icon and text */
+    align-items: center;
+    gap: 8px; /* Space between icon and text */
+}
+
+.btn-carga:hover {
+    background-color: #732d91; /* Darker purple on hover */
+}
+
+/* --- Responsiveness --- */
+@media (max-width: 768px) { /* Styles for tablets and smaller */
+    .main-container {
+        padding: 20px; /* Reduce padding */
+    }
+
+    h1 { font-size: 1.8em; }
+    h2 { font-size: 1.5em; }
+
+    .botoes-veiculo {
+        flex-direction: column; /* Stack choice buttons */
+        align-items: center; /* Center stacked buttons */
+    }
+
+    .btn-escolha {
+        width: 90%; /* Make choice buttons wider */
+        max-width: 300px; /* Limit max width */
+        flex-basis: auto; /* Reset flex basis */
+    }
+
+    .img-veiculo {
+        max-width: 95%; /* Allow image to be larger */
+    }
+
+    .botoes-acao {
+        justify-content: space-around; /* Better distribution of action buttons */
+    }
+}
+
+@media (max-width: 480px) { /* Styles for mobile phones */
+    body { padding: 10px; }
+    .main-container { padding: 15px; }
+
+    h1 { font-size: 1.6em; }
+    h2 { font-size: 1.3em; }
+
+    /* Reduce padding and font size for all buttons */
+    .botao-navegacao, .btn, .btn-escolha, .btn-voltar, .btn-carga {
+        padding: 10px 15px;
+        font-size: 0.9em;
+    }
+
+    .botoes-acao {
+        flex-direction: column; /* Stack action buttons */
+        align-items: stretch; /* Make buttons full width */
+    }
+
+    .carga-controle {
+        flex-direction: column; /* Stack cargo controls */
+        align-items: stretch; /* Make controls full width */
+    }
+
+    .carga-controle input[type="number"] {
+        width: 100%; /* Full width input */
+        margin-bottom: 10px; /* Space below input when stacked */
+    }
+}

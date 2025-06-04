@@ -1,0 +1,360 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Lato', sans-serif;
+    background-color: #f4f7f6; /* Fundo suave */
+    color: #333;
+    line-height: 1.6;
+    padding: 20px; /* Espaçamento nas bordas */
+    display: flex; /* Centralizar o container principal */
+    justify-content: center;
+    align-items: flex-start; /* Alinha no topo se o conteúdo for menor */
+    min-height: 100vh;
+}
+
+/* --- Container Principal --- */
+.main-container {
+    background-color: #ffffff; /* Fundo branco para o conteúdo */
+    padding: 30px 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 800px; /* Largura máxima para melhor leitura */
+    text-align: center; /* Centraliza títulos e botões de escolha */
+}
+
+/* --- Títulos --- */
+h1, h2 {
+    color: #2c3e50; /* Azul escuro */
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: 2.2em;
+    font-weight: 700;
+    margin-bottom: 30px; /* Mais espaço após o título principal */
+}
+
+h1 i {
+    margin-right: 10px;
+    color: #3498db; /* Azul para o ícone principal */
+}
+
+h2 {
+    font-size: 1.8em;
+    font-weight: 400;
+    border-bottom: 1px solid #ecf0f1; /* Linha sutil abaixo do título da tela */
+    padding-bottom: 10px;
+    margin-bottom: 25px;
+}
+
+h2 i {
+    margin-right: 8px;
+    color: #555;
+}
+
+/* --- Botão de Navegação Principal --- */
+.botao-navegacao {
+    display: inline-block; /* Para poder aplicar margens e padding */
+    background-color: #1abc9c; /* Verde água */
+    color: #fff;
+    padding: 12px 25px;
+    border-radius: 25px; /* Bordas arredondadas */
+    text-decoration: none;
+    font-weight: 700;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-bottom: 20px; /* Espaço antes da linha */
+}
+
+.botao-navegacao i {
+    margin-left: 8px;
+}
+
+.botao-navegacao:hover {
+    background-color: #16a085; /* Verde mais escuro no hover */
+    transform: translateY(-2px); /* Leve elevação */
+}
+
+/* --- Separador --- */
+.separator {
+    border: none;
+    height: 1px;
+    background-color: #ecf0f1; /* Cinza claro */
+    margin: 25px 0; /* Espaçamento vertical */
+}
+
+/* --- Mensagem de Feedback --- */
+.mensagem-feedback {
+    background-color: #eafaf1; /* Fundo verde claro */
+    color: #1abc9c; /* Verde água */
+    border: 1px solid #a3e9d7;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 25px;
+    font-weight: bold;
+    display: none; /* Começa escondido, JS controla */
+    text-align: left;
+}
+
+.mensagem-feedback.erro { /* Classe adicional para erros */
+    background-color: #fbeaea;
+    color: #e74c3c;
+    border-color: #f5b7b1;
+}
+
+/* --- Estilos das Telas (Geral) --- */
+.tela {
+    display: none; /* Esconde todas as telas por padrão */
+    padding: 15px 0; /* Espaçamento interno vertical */
+    text-align: left; /* Alinha conteúdo das telas à esquerda */
+    animation: fadeIn 0.5s ease-in-out; /* Animação de entrada */
+}
+
+.tela-ativa {
+    display: block; /* Mostra a tela ativa */
+}
+
+/* Animação Fade-in */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+
+/* --- Tela Principal (Escolha) --- */
+#telaPrincipal h2 {
+    text-align: center; /* Centraliza título da escolha */
+    border-bottom: none; /* Remove linha do H2 aqui */
+    margin-bottom: 30px;
+}
+
+.botoes-veiculo {
+    display: flex;
+    justify-content: center; /* Centraliza os botões */
+    gap: 20px; /* Espaço entre os botões */
+    flex-wrap: wrap; /* Quebra linha se não couber */
+}
+
+.btn-escolha {
+    flex-basis: 200px; /* Largura base */
+    padding: 25px 20px;
+    font-size: 1.1em;
+    background-color: #3498db; /* Azul */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: flex; /* Para alinhar ícone e texto */
+    flex-direction: column; /* Ícone acima do texto */
+    align-items: center;
+    gap: 10px; /* Espaço entre ícone e texto */
+}
+
+.btn-escolha i {
+    font-size: 2em; /* Ícone maior */
+}
+
+.btn-escolha:hover {
+    background-color: #2980b9; /* Azul mais escuro */
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+
+/* --- Telas de Veículos (Carro, Esportivo, Caminhão) --- */
+.btn-voltar {
+    background: none;
+    border: 1px solid #bdc3c7; /* Borda cinza */
+    color: #34495e; /* Azul acinzentado */
+    padding: 8px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-bottom: 25px; /* Espaço abaixo do botão voltar */
+    transition: background-color 0.3s ease, color 0.3s ease;
+    float: left; /* Alinha à esquerda */
+}
+
+.btn-voltar i {
+    margin-right: 5px;
+}
+
+.btn-voltar:hover {
+    background-color: #ecf0f1; /* Fundo cinza claro no hover */
+    color: #2c3e50;
+}
+
+.img-veiculo {
+    display: block; /* Para poder centralizar com margem */
+    max-width: 80%; /* Limita a largura */
+    height: auto; /* Mantém proporção */
+    margin: 0 auto 25px auto; /* Centraliza e adiciona espaço abaixo */
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.info-veiculo {
+    background-color: #ecf0f1; /* Fundo cinza claro */
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 25px;
+    font-style: italic;
+    color: #555;
+    text-align: center; /* Centraliza texto do status */
+}
+
+.botoes-acao {
+    display: flex;
+    flex-wrap: wrap; /* Quebra linha em telas menores */
+    gap: 15px; /* Espaço entre os botões */
+    justify-content: center; /* Centraliza os botões de ação */
+    margin-bottom: 25px; /* Espaço antes de controles específicos (carga) */
+    padding-top: 15px;
+    border-top: 1px solid #ecf0f1; /* Separador sutil */
+}
+
+/* Estilo base para botões de ação */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    font-size: 0.95em;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    display: inline-flex; /* Para alinhar ícone e texto */
+    align-items: center;
+    gap: 8px; /* Espaço entre ícone e texto */
+}
+
+.btn:active {
+    transform: scale(0.98); /* Efeito de clique */
+}
+
+/* Cores específicas dos botões */
+.btn-ligar { background-color: #2ecc71; } /* Verde */
+.btn-ligar:hover { background-color: #27ae60; }
+
+.btn-desligar { background-color: #e74c3c; } /* Vermelho */
+.btn-desligar:hover { background-color: #c0392b; }
+
+.btn-acao { background-color: #3498db; } /* Azul */
+.btn-acao:hover { background-color: #2980b9; }
+
+.btn-turbo { background-color: #f39c12; } /* Laranja */
+.btn-turbo:hover { background-color: #e67e22; }
+
+.btn-turbo-off { background-color: #95a5a6; } /* Cinza */
+.btn-turbo-off:hover { background-color: #7f8c8d; }
+
+/* --- Controles Específicos (Caminhão) --- */
+.carga-controle {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #f8f9f9; /* Fundo levemente diferente */
+    border-radius: 5px;
+    border: 1px solid #ecf0f1;
+    display: flex;
+    flex-wrap: wrap; /* Quebra linha se necessário */
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.carga-controle label {
+    font-weight: bold;
+    color: #555;
+    margin-right: 5px; /* Pequeno espaço antes do input */
+}
+
+.carga-controle label i {
+    margin-right: 5px;
+}
+
+.carga-controle input[type="number"] {
+    padding: 8px 12px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    width: 100px; /* Largura fixa para o input */
+    text-align: right;
+}
+
+/* Estilo do botão carregar */
+.btn-carga {
+    padding: 9px 18px;
+    background-color: #8e44ad; /* Roxo */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-carga:hover {
+    background-color: #732d91; /* Roxo mais escuro */
+}
+
+/* --- Responsividade (Exemplo Simples) --- */
+@media (max-width: 768px) {
+    .main-container {
+        padding: 20px;
+    }
+
+    h1 { font-size: 1.8em; }
+    h2 { font-size: 1.5em; }
+
+    .botoes-veiculo {
+        flex-direction: column; /* Empilha os botões de escolha */
+        align-items: center; /* Centraliza os botões empilhados */
+    }
+
+    .btn-escolha {
+        width: 90%; /* Ocupa mais largura */
+        max-width: 300px; /* Limite */
+        flex-basis: auto; /* Reseta a base flex */
+    }
+
+    .img-veiculo {
+        max-width: 95%; /* Permite imagem maior em telas menores */
+    }
+
+    .botoes-acao {
+        justify-content: space-around; /* Distribui melhor os botões */
+    }
+}
+
+@media (max-width: 480px) {
+    body { padding: 10px; }
+    .main-container { padding: 15px; }
+
+    h1 { font-size: 1.6em; }
+    h2 { font-size: 1.3em; }
+
+    .botao-navegacao, .btn, .btn-escolha, .btn-voltar, .btn-carga {
+        padding: 10px 15px; /* Reduz padding dos botões */
+        font-size: 0.9em;
+    }
+
+    .botoes-acao {
+        flex-direction: column; /* Empilha botões de ação */
+        align-items: stretch; /* Faz botões ocuparem largura */
+    }
+
+    .carga-controle {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .carga-controle input[type="number"] {
+        width: 100%; /* Ocupa toda a largura */
+        margin-bottom: 10px; /* Espaço antes do botão */
+    }
+}
