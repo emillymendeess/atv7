@@ -268,4 +268,129 @@
     <script src="script.js"></script>
 
 </body>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Garagem Inteligente Conectada</title> <!-- Título atualizado -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- Font Awesome para ícones (opcional, mas usado no CSS/JS) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <h1><i class="fas fa-warehouse"></i> Garagem Inteligente Conectada</h1>
+
+    <div id="notificacoes"></div>
+
+    <!-- Seção Adicionar Veículo (Sem alterações) -->
+    <div class="form-section">
+        <h3><i class="fas fa-plus-circle"></i> Adicionar Novo Veículo</h3>
+        <form id="formAdicionarVeiculo">
+             <label for="tipoVeiculo">Tipo:</label>
+             <select id="tipoVeiculo" required>
+                 <option value="" disabled selected>Selecione o tipo</option>
+                 <option value="Carro">Carro</option>
+                 <option value="CarroEsportivo">Carro Esportivo</option>
+                 <option value="Caminhao">Caminhão</option>
+             </select>
+             <label for="modeloVeiculo">Modelo:</label>
+             <input type="text" id="modeloVeiculo" placeholder="Ex: Fusca, Ferrari, Scania" required>
+             <label for="corVeiculo">Cor:</label>
+             <input type="text" id="corVeiculo" placeholder="Ex: Azul, Vermelho, Prata" required>
+             <div id="campoCapacidadeCarga" style="display: none;">
+                 <label for="capacidadeCargaVeiculo">Capacidade de Carga (kg):</label>
+                 <input type="number" id="capacidadeCargaVeiculo" min="0" placeholder="Ex: 10000">
+             </div>
+             <button type="submit"><i class="fas fa-save"></i> Adicionar à Garagem</button>
+         </form>
+    </div>
+
+    <!-- Seção da Garagem (Lista de Veículos) -->
+    <div class="list-section">
+        <h2><i class="fas fa-car"></i> Garagem</h2>
+        <div id="listaVeiculos"><p>Carregando veículos...</p></div>
+    </div>
+    
+    <!-- ================================== -->
+    <!-- == NOVAS SEÇÕES - DICAS DA API == -->
+    <!-- ================================== -->
+    <div class="list-section">
+        <h3><i class="fas fa-lightbulb"></i> Dicas e Sugestões</h3>
+        <div id="dicas-api-container">
+            <!-- Dicas Gerais -->
+            <div id="dicas-gerais-container">
+                <h4><i class="fas fa-tools"></i> Dicas Gerais de Manutenção</h4>
+                <div class="api-content"><p>Buscando dicas do nosso servidor...</p></div>
+            </div>
+            <!-- Viagens Populares -->
+            <div id="viagens-populares-container" style="margin-top: 25px;">
+                <h4><i class="fas fa-road"></i> Sugestões de Viagem</h4>
+                <div class="api-content"><p>Buscando sugestões...</p></div>
+            </div>
+        </div>
+    </div>
+    <!-- ================================== -->
+    <!-- == FIM NOVAS SEÇÕES ============== -->
+    <!-- ================================== -->
+
+    <!-- Seção de Agendamentos Futuros (Sem alterações) -->
+    <div class="list-section">
+        <h3><i class="fas fa-calendar-alt"></i> Agendamentos Futuros</h3>
+        <div id="listaAgendamentosFuturos"><p>Nenhum agendamento futuro encontrado.</p></div>
+    </div>
+
+    <!-- Seção Planejador de Viagem com Clima (Sem alterações) -->
+    <div class="form-section" id="planejador-viagem">
+        <h3><i class="fas fa-map-marked-alt"></i> Planejar Viagem com Clima</h3>
+        <label for="destino-viagem">Cidade de Destino:</label>
+        <input type="text" id="destino-viagem" placeholder="Digite o nome da cidade">
+        <button id="verificar-clima-btn"><i class="fas fa-cloud-sun"></i> Verificar Clima</button>
+        <div class="forecast-controls" id="forecast-interaction-controls" style="display: none;">
+            <!-- Controles de filtro... -->
+        </div>
+        <div id="previsao-tempo-resultado" style="display: none;"></div>
+    </div>
+
+    <!-- Modal para Detalhes do Veículo e Manutenção -->
+    <div id="modalDetalhesVeiculo" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="fecharModal()">×</span>
+            <h2 id="modalTituloVeiculo">Detalhes do Veículo</h2>
+            <div id="modalInfoVeiculo" class="info-veiculo"></div>
+            
+            <!-- Detalhes Extras da API (FIPE, Recall...) -->
+            <div id="detalhes-extras-api">
+                <div id="detalhes-extras-api-content" style="margin-top: 10px;"></div>
+            </div>
+            
+            <!-- NOVO: Placeholder para Dicas Específicas do Veículo -->
+            <div id="dicas-especificas-api" style="margin-top: 20px;"></div>
+            
+            <div class="actions" id="modalAcoesVeiculo"></div>
+            <div class="list-section">
+                <h3><i class="fas fa-tools"></i> Histórico e Agendamentos</h3>
+                <div id="modalHistoricoManutencao"></div>
+            </div>
+            <div class="form-section">
+                <h3 id="modalFormManutencaoTitulo"><i class="fas fa-plus-square"></i> Registrar Nova Manutenção</h3>
+                <form id="formManutencao">
+                     <input type="hidden" id="manutencaoVeiculoId">
+                     <label for="manutencaoData">Data e Hora:</label>
+                     <input type="datetime-local" id="manutencaoData" required>
+                     <label for="manutencaoTipo">Tipo de Serviço:</label>
+                     <input type="text" id="manutencaoTipo" placeholder="Ex: Troca de óleo" required>
+                     <label for="manutencaoCusto">Custo (R$):</label>
+                     <input type="number" id="manutencaoCusto" min="0" step="0.01" required>
+                     <label for="manutencaoDescricao">Descrição (Opcional):</label>
+                     <textarea id="manutencaoDescricao" rows="3"></textarea>
+                     <button type="submit"><i class="fas fa-save"></i> Salvar Manutenção</button>
+                 </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+    <script src="script.js"></script>
+</body>
 </html>

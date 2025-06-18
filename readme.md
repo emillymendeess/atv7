@@ -1,4 +1,98 @@
+# Garagem Inteligente Conectada
 
+Esta é uma versão evoluída da Garagem Inteligente, agora integrada com uma API simulada para detalhes extras de veículos e uma API real (OpenWeatherMap) para previsão do tempo em planejamentos de viagem.
+
+## Funcionalidades Principais
+
+*   Gerenciamento de veículos na garagem (Adicionar, Remover, Visualizar).
+*   Registro e visualização de histórico de manutenção e agendamentos futuros.
+*   Ações interativas com veículos (Ligar, Desligar, Acelerar, Buzinar, específicas por tipo).
+*   Persistência de dados no LocalStorage.
+*   **NOVO:** Exibição de detalhes extras do veículo (Valor FIPE, Recalls, Dicas) via API simulada (`dados_veiculos_api.json`).
+*   **NOVO (Desafio Extra):** Planejador de Viagem com consulta à previsão do tempo atual da cidade de destino usando a API OpenWeatherMap.
+
+---
+
+## API Backend da Garagem Inteligente
+
+O projeto inclui um servidor backend em Node.js (`server.js`) que fornece dados e serviços para o frontend.
+
+### Como Executar o Backend (Localmente)
+
+1.  Certifique-se de ter o [Node.js](https://nodejs.org/) instalado.
+2.  No terminal, navegue até a pasta do projeto.
+3.  Instale as dependências: `npm install`
+4.  Inicie o servidor: `npm run dev` (ou `node server.js`)
+5.  O servidor estará rodando em `http://localhost:3000`.
+
+### Endpoints da API
+
+A seguir, a documentação dos endpoints disponíveis:
+
+#### 1. Dicas de Manutenção Gerais
+
+*   **Endpoint:** `GET /api/dicas-manutencao`
+*   **Descrição:** Retorna uma lista de dicas de manutenção aplicáveis a qualquer veículo.
+*   **Resposta (Exemplo):**
+    ```json
+    [
+      { "id": 1, "dica": "Verifique o nível do óleo do motor regularmente." },
+      { "id": 2, "dica": "Calibre os pneus semanalmente, incluindo o estepe." }
+    ]
+    ```
+
+#### 2. Dicas de Manutenção por Tipo de Veículo
+
+*   **Endpoint:** `GET /api/dicas-manutencao/:tipoVeiculo`
+*   **Descrição:** Retorna dicas de manutenção específicas para o tipo de veículo informado.
+*   **Parâmetros de URL:**
+    *   `tipoVeiculo` (string): O tipo do veículo. Valores aceitos: `carro`, `carroesportivo`, `caminhao`.
+*   **Resposta (Exemplo para `/api/dicas-manutencao/caminhao`):**
+    ```json
+    [
+      { "id": 20, "dica": "Verifique a pressão dos pneus de carga antes de cada viagem." },
+      { "id": 21, "dica": "Inspecione o sistema de freios a ar com frequência." }
+    ]
+    ```
+*   **Resposta de Erro (404 Not Found):**
+    ```json
+    { "error": "Nenhuma dica encontrada para o tipo: moto" }
+    ```
+
+#### 3. Sugestões de Viagem Populares
+
+*   **Endpoint:** `GET /api/viagens-populares`
+*   **Descrição:** Retorna uma lista de destinos de viagem populares para inspirar os usuários.
+*   **Resposta (Exemplo):**
+    ```json
+    [
+      { "id": 1, "destino": "Serra Gaúcha, RS", "descricao": "Aproveite o clima frio, vinhos e paisagens deslumbrantes." },
+      { "id": 2, "destino": "Litoral Nordestino, BR", "descricao": "Relaxe nas praias paradisíacas com sol o ano todo." }
+    ]
+    ```
+    
+#### 4. Próxima Revisão (Simulação)
+
+*   **Endpoint:** `GET /api/veiculos/:placa/proxima-revisao`
+*   **Descrição:** Simula a busca pela data e detalhes da próxima revisão de um veículo com base na placa.
+*   **Parâmetros de URL:**
+    *   `placa` (string): A placa do veículo (ex: `ABC-1234`).
+*   **Resposta (Exemplo para `/api/veiculos/ABC-1234/proxima-revisao`):**
+    ```json
+    {
+      "placa": "ABC-1234",
+      "modelo": "Sedan",
+      "proximaRevisao": "2024-12-15",
+      "itensVerificar": ["Troca de óleo", "Filtro de ar", "Alinhamento"]
+    }
+    ```
+*   **Resposta de Erro (404 Not Found):**
+    ```json
+    { "message": "Nenhum registro de revisão encontrado para a placa: XXX-0000" }
+    ```
+
+---
+*(O restante da documentação sobre a API de clima e uso geral continua aqui...)*
 # Garagem Inteligente Conectada
 
 Esta é uma versão evoluída da Garagem Inteligente, agora integrada com uma API simulada para detalhes extras de veículos e uma API real (OpenWeatherMap) para previsão do tempo em planejamentos de viagem.

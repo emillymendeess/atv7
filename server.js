@@ -1,94 +1,146 @@
-// Importações
-import express from 'express';
-import dotenv from 'dotenv';
-import axios from 'axios';
+// server.js
 
-// Carrega variáveis de ambiente do arquivo .env
+// Usando a sintaxe de import do ES Modules, conforme definido no package.json
+import express from 'express';
+import cors from 'cors';
+import axios from 'axios';
+import dotenv from 'dotenv';
+
+// Carrega as variáveis de ambiente do arquivo .env
 dotenv.config();
 
-// Inicializa o aplicativo Express
+// Inicializando o aplicativo Express
 const app = express();
-const port = process.env.PORT || 3001; // Porta para o servidor backend
-                                    // Use uma porta diferente do frontend se rodar ambos localmente
-const apiKey = process.env.OPENWEATHER_API_KEY;
+// Usa a porta fornecida pelo ambiente (ex: Render) ou a porta 3000 para desenvolvimento local
+const PORT = process.env.PORT || 3000;
 
-// Middleware para permitir que o frontend (rodando em outra porta) acesse este backend
-// (CORS - Cross-Origin Resource Sharing)
-// Para desenvolvimento, '*' é aceitável. Em produção, restrinja para o seu domínio frontend.
-app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    // Em um ambiente de desenvolvimento, pode ser útil permitir múltiplas origens ou '*'
-    // Ex: if (['http://localhost:3000', 'http://127.0.0.1:5500', 'http://localhost:5500'].includes(origin)) {
-    // Para este exemplo, vamos usar '*' mas com a ressalva de segurança para produção.
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    next();
-});
+// Middlewares
+app.use(cors()); // Habilita o CORS para permitir que o frontend faça requisições
+app.use(express.json()); // Permite que o servidor entenda requisições com corpo em JSON
 
-// ----- NOSSO PRIMEIRO ENDPOINT: Previsão do Tempo -----
+// --- DADOS MOCKADOS (Simulando um Banco de Dados) ---
+
+const dicasManutencaoGerais = [
+    { id: 1, dica: "Verifique o nível do óleo do motor regularmente." },
+    { id: 2, dica: "Calibre os pneus semanalmente, incluindo o estepe." },
+    { id: 3, dica: "Confira o fluido de arrefecimento (água do radiador)." },
+    { id: 4, dica: "Teste os freios para garantir que estão respondendo bem." },
+    { id: 5, dica: "Mantenha os faróis e lanternas limpos e funcionando." }
+];
+
+const dicasPorTipo = {
+    carro: [
+        { id: 10, dica: "Faça o rodízio dos pneus a cada 10.000 km para um desgaste uniforme." },
+        { id: 11, dica: "Verifique o alinhamento e balanceamento periodicamente." }
+    ],
+    carroesportivo: [
+        { id: 15, dica: "Aqueça o motor por alguns minutos antes de exigir alto desempenho." },
+        { id: 16, dica: "Use sempre combustível de alta octanagem recomendado pelo fabricante." }
+    ],
+    caminhao: [
+        { id: 20, dica: "Verifique a pressão dos pneus de carga antes de cada viagem." },
+        { id: 21, dica: "Inspecione o sistema de freios a ar com frequência." }
+    ]
+};
+
+const viagensPopulares = [
+    { id: 1, destino: "Serra Gaúcha, RS", descricao: "Aproveite o clima frio, vinhos e paisagens deslumbrantes." },
+    { id: 2, destino: "Litoral Nordestino, BR", descricao: "Relaxe nas praias paradisíacas com sol o ano todo." },
+    { id: 3, destino: "Rota 66, EUA", descricao: "Uma viagem clássica pela história e cultura americana." }
+];
+
+const proximasRevisoes = {
+    'ABC-1234': {
+        placa: 'ABC-1234', modelo: 'Sedan', proximaRevisao: '2024-12-15',
+        itensVerificar: ['Troca de óleo', 'Filtro de ar', 'Alinhamento']
+    },
+    'XYZ-9876': {
+        placa: 'XYZ-9876', modelo: 'Super Carro', proximaRevisao: '2025-02-10',
+        itensVerificar: ['Fluidos de alta performance', 'Sistema de freios', 'Pneus esportivos']
+    }
+};
+
+
+// --- DEFINIÇÃO DOS ENDPOINTS (ROTAS DA API) ---
+
 /**
- * @route GET /api/previsao/:cidade
- * @description Retorna a previsão do tempo para a cidade especificada, atuando como proxy para a OpenWeatherMap API.
- * @param {string} :cidade - O nome da cidade para a qual a previsão é solicitada.
- * @returns {JSON} Os dados da previsão do tempo da OpenWeatherMap ou um objeto de erro.
+ * Endpoint Proxy para a API OpenWeatherMap.
+ * Essencial para manter a chave da API segura no backend.
  */
 app.get('/api/previsao/:cidade', async (req, res) => {
-    const { cidade } = req.params; // Pega o parâmetro :cidade da URL
+    const { cidade } = req.params;
+    const apiKey = process.env.OPENWEATHER_API_KEY;
 
     if (!apiKey) {
-        console.error('[Servidor] Chave da API OpenWeatherMap não configurada no servidor.');
-        return res.status(500).json({ error: 'Chave da API OpenWeatherMap não configurada no servidor.' });
-    }
-    if (!cidade) {
-        console.warn('[Servidor] Requisição recebida sem nome da cidade.');
-        return res.status(400).json({ error: 'Nome da cidade é obrigatório.' });
+        console.error("ERRO: A chave da API OpenWeatherMap não foi definida no arquivo .env");
+        return res.status(500).json({ error: 'Erro de configuração no servidor: a chave da API não foi encontrada.' });
     }
 
-    const weatherAPIUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${cidade}&appid=${apiKey}&units=metric&lang=pt_br`;
+    // Usando o endpoint de previsão de 5 dias / 3 horas, que o frontend espera.
+    const url = `https://api.openweathermap.org/data/2.5/forecast?q=${cidade}&appid=${apiKey}&units=metric&lang=pt_br`;
+    console.log(`[Backend] Recebida requisição para a cidade: ${cidade}. Chamando a API externa.`);
 
     try {
-        console.log(`[Servidor] Buscando previsão para: ${cidade} na URL: ${weatherAPIUrl.replace(apiKey, 'SUA_CHAVE_OCULTA')}`);
-        const apiResponse = await axios.get(weatherAPIUrl);
-        console.log(`[Servidor] Dados recebidos da OpenWeatherMap para ${cidade}. Status: ${apiResponse.status}`);
-        
-        // Enviamos a resposta da API OpenWeatherMap diretamente para o nosso frontend
-        res.json(apiResponse.data);
-
+        const response = await axios.get(url);
+        // Repassa a resposta da OpenWeatherMap diretamente para o frontend
+        res.json(response.data);
     } catch (error) {
-        console.error(`[Servidor] Erro ao buscar previsão para ${cidade}:`, error.response?.data || error.message);
-        const status = error.response?.status || 500;
-        let message = 'Erro ao buscar previsão do tempo no servidor.';
-
-        if (error.response) { // Erro vindo da API OpenWeatherMap
-            message = error.response.data?.message || `A API OpenWeatherMap retornou um erro ${status}.`;
-            if (status === 401) {
-                message = 'Chave da API OpenWeatherMap inválida ou não autorizada no servidor.';
-            } else if (status === 404) {
-                message = `Cidade "${cidade}" não encontrada pela API OpenWeatherMap.`;
-            }
-        } else if (error.request) { // A requisição foi feita mas não houve resposta
-            message = 'Não foi possível conectar à API OpenWeatherMap. Verifique a conexão do servidor.';
-        } else { // Algum outro erro ao configurar a requisição
-            message = `Erro interno no servidor ao tentar buscar previsão: ${error.message}`;
+        console.error("[Backend] Erro ao chamar a API OpenWeatherMap:", error.response?.data || error.message);
+        // Se a API externa retornou um erro (ex: cidade não encontrada), repassa o status e a mensagem
+        if (error.response) {
+            res.status(error.response.status).json({
+                error: `Erro da API de clima: ${error.response.data.message}`
+            });
+        } else {
+            // Se foi um erro de rede ou outro problema
+            res.status(500).json({ error: 'Não foi possível conectar ao serviço de previsão do tempo.' });
         }
-        
-        res.status(status).json({ error: message });
     }
 });
 
-// Rota raiz para verificar se o servidor está no ar
+
+// 1. Endpoint para Dicas de Manutenção Gerais
+app.get('/api/dicas-manutencao', (req, res) => {
+    console.log('Requisição recebida em /api/dicas-manutencao');
+    res.json(dicasManutencaoGerais);
+});
+
+// 2. Endpoint para Dicas de Manutenção por Tipo de Veículo
+app.get('/api/dicas-manutencao/:tipoVeiculo', (req, res) => {
+    const { tipoVeiculo } = req.params;
+    console.log(`Requisição recebida para o tipo de veículo: ${tipoVeiculo}`);
+    const dicas = dicasPorTipo[tipoVeiculo.toLowerCase()];
+    if (dicas) {
+        res.json(dicas);
+    } else {
+        res.status(404).json({ error: `Nenhuma dica encontrada para o tipo: ${tipoVeiculo}` });
+    }
+});
+
+// 3. Endpoint para Viagens Populares
+app.get('/api/viagens-populares', (req, res) => {
+    console.log('Requisição recebida em /api/viagens-populares');
+    res.json(viagensPopulares);
+});
+
+// 4. (Bônus) Endpoint para Próxima Revisão por Placa
+app.get('/api/veiculos/:placa/proxima-revisao', (req, res) => {
+    const { placa } = req.params;
+    console.log(`Buscando revisão para a placa: ${placa}`);
+    const revisao = proximasRevisoes[placa.toUpperCase()];
+    if (revisao) {
+        res.json(revisao);
+    } else {
+        res.status(404).json({ message: `Nenhum registro de revisão encontrado para a placa: ${placa}` });
+    }
+});
+
+// Rota raiz para testar se o servidor está no ar
 app.get('/', (req, res) => {
-    res.send('Servidor Backend da Garagem Inteligente está funcionando!');
+    res.send('<h1>API da Garagem Inteligente Conectada está no ar!</h1>');
 });
 
-
-// Inicia o servidor
-app.listen(port, () => {
-    console.log(`Servidor backend rodando em http://localhost:${port}`);
-    if (!apiKey) {
-        console.warn('**************************************************************************************');
-        console.warn('* ATENÇÃO: A variável de ambiente OPENWEATHER_API_KEY não está definida no arquivo .env *');
-        console.warn('* O endpoint de previsão do tempo não funcionará corretamente.                        *');
-        console.warn('**************************************************************************************');
-    }
+// Iniciando o servidor
+app.listen(PORT, () => {
+    console.log(`Servidor da Garagem Inteligente rodando em http://localhost:${PORT}`);
 });
