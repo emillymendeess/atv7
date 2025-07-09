@@ -1,146 +1,146 @@
-// server.js
-
-// Usando a sintaxe de import do ES Modules, conforme definido no package.json
+// server.js modificado para usar MongoDB Atlas
 import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
 import dotenv from 'dotenv';
+import { MongoClient, ObjectId } from 'mongodb'; // <-- 1. IMPORTAR o MongoClient
 
-// Carrega as variáveis de ambiente do arquivo .env
+// Configuração inicial
 dotenv.config();
-
-// Inicializando o aplicativo Express
 const app = express();
-// Usa a porta fornecida pelo ambiente (ex: Render) ou a porta 3000 para desenvolvimento local
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Middlewares
-app.use(cors()); // Habilita o CORS para permitir que o frontend faça requisições
-app.use(express.json()); // Permite que o servidor entenda requisições com corpo em JSON
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
 
-// --- DADOS MOCKADOS (Simulando um Banco de Dados) ---
+// --- VARIÁVEIS DE CONEXÃO E BANCO DE DADOS ---
+const mongoUrl = process.env.DATABASE_URL;
+const dbName = 'garagemDB'; // O nome do banco que você definiu na string de conexão
+let veiculosCollection; // Variável para acessar a coleção de veículos
 
-const dicasManutencaoGerais = [
-    { id: 1, dica: "Verifique o nível do óleo do motor regularmente." },
-    { id: 2, dica: "Calibre os pneus semanalmente, incluindo o estepe." },
-    { id: 3, dica: "Confira o fluido de arrefecimento (água do radiador)." },
-    { id: 4, dica: "Teste os freios para garantir que estão respondendo bem." },
-    { id: 5, dica: "Mantenha os faróis e lanternas limpos e funcionando." }
-];
-
-const dicasPorTipo = {
-    carro: [
-        { id: 10, dica: "Faça o rodízio dos pneus a cada 10.000 km para um desgaste uniforme." },
-        { id: 11, dica: "Verifique o alinhamento e balanceamento periodicamente." }
-    ],
-    carroesportivo: [
-        { id: 15, dica: "Aqueça o motor por alguns minutos antes de exigir alto desempenho." },
-        { id: 16, dica: "Use sempre combustível de alta octanagem recomendado pelo fabricante." }
-    ],
-    caminhao: [
-        { id: 20, dica: "Verifique a pressão dos pneus de carga antes de cada viagem." },
-        { id: 21, dica: "Inspecione o sistema de freios a ar com frequência." }
-    ]
-};
-
-const viagensPopulares = [
-    { id: 1, destino: "Serra Gaúcha, RS", descricao: "Aproveite o clima frio, vinhos e paisagens deslumbrantes." },
-    { id: 2, destino: "Litoral Nordestino, BR", descricao: "Relaxe nas praias paradisíacas com sol o ano todo." },
-    { id: 3, destino: "Rota 66, EUA", descricao: "Uma viagem clássica pela história e cultura americana." }
-];
-
-const proximasRevisoes = {
-    'ABC-1234': {
-        placa: 'ABC-1234', modelo: 'Sedan', proximaRevisao: '2024-12-15',
-        itensVerificar: ['Troca de óleo', 'Filtro de ar', 'Alinhamento']
-    },
-    'XYZ-9876': {
-        placa: 'XYZ-9876', modelo: 'Super Carro', proximaRevisao: '2025-02-10',
-        itensVerificar: ['Fluidos de alta performance', 'Sistema de freios', 'Pneus esportivos']
+// --- FUNÇÃO PARA CONECTAR AO MONGODB ATLAS ---
+const connectToDb = async () => {
+    try {
+        const client = new MongoClient(mongoUrl);
+        await client.connect();
+        console.log('✅ Conectado com sucesso ao MongoDB Atlas!');
+        const db = client.db(dbName);
+        veiculosCollection = db.collection('veiculos'); // Aponta para a coleção "veiculos"
+    } catch (error) {
+        console.error('❌ Erro ao conectar com o MongoDB Atlas:', error);
+        process.exit(1); // Encerra a aplicação se não conseguir conectar ao DB
     }
 };
 
-
-// --- DEFINIÇÃO DOS ENDPOINTS (ROTAS DA API) ---
+// --- ENDPOINTS (Rotas da API) ---
 
 /**
- * Endpoint Proxy para a API OpenWeatherMap.
- * Essencial para manter a chave da API segura no backend.
+ * Rota Principal
+ */
+app.get('/', (req, res) => {
+    res.send('<h1>API da Garagem Inteligente Conectada está no ar e conectada ao DB!</h1>');
+});
+
+/**
+ * ROTA TEMPORÁRIA PARA POPULAR O BANCO DE DADOS (SEED)
+ * Chame esta rota UMA VEZ para inserir os dados iniciais no seu banco.
+ * Exemplo: acesse http://localhost:3001/api/seed no seu navegador.
+ */
+app.get('/api/seed', async (req, res) => {
+    const dadosIniciais = [
+        {
+            // O ID agora é gerenciado pelo MongoDB (_id), mas mantemos um ID amigável.
+            id_veiculo: "veh-lxhq4v7a-9z3b1c8e", 
+            valorFipe: "R$ 45.000,00",
+            recallPendente: false,
+            recallInfo: "Nenhum recall pendente.",
+            proximaRevisaoKm: 80000,
+            dicaManutencao: "Verificar nível do óleo a cada 5.000km."
+        },
+        {
+            id_veiculo: "veh-ly0a9b8f-d4e5f6g7",
+            valorFipe: "R$ 180.000,00",
+            recallPendente: true,
+            recallInfo: "Recall pendente: Substituição do módulo do airbag do passageiro.",
+            proximaRevisaoKm: 50000,
+            dicaManutencao: "Manter pneus calibrados conforme especificação para melhor performance."
+        }
+    ];
+
+    try {
+        // Limpa a coleção para evitar duplicatas ao chamar a rota novamente
+        await veiculosCollection.deleteMany({}); 
+        // Insere os novos dados
+        const resultado = await veiculosCollection.insertMany(dadosIniciais);
+        console.log(`[SEED] Banco de dados populado com ${resultado.insertedCount} veículos.`);
+        res.status(201).json({ message: `Banco de dados populado com sucesso com ${resultado.insertedCount} veículos.` });
+    } catch (error) {
+        console.error('[SEED] Erro ao popular o banco de dados:', error);
+        res.status(500).json({ error: 'Falha ao popular o banco de dados.' });
+    }
+});
+
+
+/**
+ * Endpoint para buscar detalhes de um veículo específico do MongoDB.
+ * A busca agora é feita pelo campo "id_veiculo" que criamos.
+ */
+app.get('/api/veiculo/:id', async (req, res) => { // <-- Rota agora é async
+    const { id } = req.params;
+
+    try {
+        // Busca no banco de dados pelo campo 'id_veiculo'
+        const detalhes = await veiculosCollection.findOne({ id_veiculo: id });
+
+        if (detalhes) {
+            console.log(`[Backend DB] Detalhes encontrados para o veículo ID: ${id}`);
+            res.json(detalhes);
+        } else {
+            console.warn(`[Backend DB] Nenhum detalhe encontrado para o veículo ID: ${id}`);
+            res.status(404).json({ error: 'Detalhes do veículo não encontrados.' });
+        }
+    } catch (error) {
+        console.error(`[Backend DB] Erro ao buscar veículo ID ${id}:`, error);
+        res.status(500).json({ error: 'Erro interno do servidor ao buscar dados do veículo.' });
+    }
+});
+
+/**
+ * Rota Proxy para a API OpenWeatherMap (Permanece igual)
  */
 app.get('/api/previsao/:cidade', async (req, res) => {
+    // ... (este código não muda, então foi omitido para brevidade, mantenha o seu original)
     const { cidade } = req.params;
     const apiKey = process.env.OPENWEATHER_API_KEY;
 
     if (!apiKey) {
-        console.error("ERRO: A chave da API OpenWeatherMap não foi definida no arquivo .env");
-        return res.status(500).json({ error: 'Erro de configuração no servidor: a chave da API não foi encontrada.' });
+        console.error('[Backend] ERRO: OPENWEATHER_API_KEY não definida no arquivo .env');
+        return res.status(500).json({ error: 'Chave da API de clima não configurada no servidor.' });
     }
 
-    // Usando o endpoint de previsão de 5 dias / 3 horas, que o frontend espera.
-    const url = `https://api.openweathermap.org/data/2.5/forecast?q=${cidade}&appid=${apiKey}&units=metric&lang=pt_br`;
-    console.log(`[Backend] Recebida requisição para a cidade: ${cidade}. Chamando a API externa.`);
+    const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${cidade}&appid=${apiKey}&units=metric&lang=pt_br`;
 
     try {
-        const response = await axios.get(url);
-        // Repassa a resposta da OpenWeatherMap diretamente para o frontend
+        console.log(`[Backend] Buscando previsão para '${cidade}' na API OpenWeatherMap.`);
+        const response = await axios.get(apiUrl);
         res.json(response.data);
     } catch (error) {
-        console.error("[Backend] Erro ao chamar a API OpenWeatherMap:", error.response?.data || error.message);
-        // Se a API externa retornou um erro (ex: cidade não encontrada), repassa o status e a mensagem
-        if (error.response) {
-            res.status(error.response.status).json({
-                error: `Erro da API de clima: ${error.response.data.message}`
-            });
-        } else {
-            // Se foi um erro de rede ou outro problema
-            res.status(500).json({ error: 'Não foi possível conectar ao serviço de previsão do tempo.' });
-        }
+        const status = error.response ? error.response.status : 500;
+        const message = error.response ? error.response.data.message : 'Erro ao conectar com a API de clima.';
+        console.error(`[Backend] Falha ao buscar previsão para '${cidade}': ${status} - ${message}`);
+        res.status(status).json({ error: `Falha ao buscar previsão: ${message}` });
     }
 });
 
-
-// 1. Endpoint para Dicas de Manutenção Gerais
-app.get('/api/dicas-manutencao', (req, res) => {
-    console.log('Requisição recebida em /api/dicas-manutencao');
-    res.json(dicasManutencaoGerais);
-});
-
-// 2. Endpoint para Dicas de Manutenção por Tipo de Veículo
-app.get('/api/dicas-manutencao/:tipoVeiculo', (req, res) => {
-    const { tipoVeiculo } = req.params;
-    console.log(`Requisição recebida para o tipo de veículo: ${tipoVeiculo}`);
-    const dicas = dicasPorTipo[tipoVeiculo.toLowerCase()];
-    if (dicas) {
-        res.json(dicas);
-    } else {
-        res.status(404).json({ error: `Nenhuma dica encontrada para o tipo: ${tipoVeiculo}` });
-    }
-});
-
-// 3. Endpoint para Viagens Populares
-app.get('/api/viagens-populares', (req, res) => {
-    console.log('Requisição recebida em /api/viagens-populares');
-    res.json(viagensPopulares);
-});
-
-// 4. (Bônus) Endpoint para Próxima Revisão por Placa
-app.get('/api/veiculos/:placa/proxima-revisao', (req, res) => {
-    const { placa } = req.params;
-    console.log(`Buscando revisão para a placa: ${placa}`);
-    const revisao = proximasRevisoes[placa.toUpperCase()];
-    if (revisao) {
-        res.json(revisao);
-    } else {
-        res.status(404).json({ message: `Nenhum registro de revisão encontrado para a placa: ${placa}` });
-    }
-});
-
-// Rota raiz para testar se o servidor está no ar
-app.get('/', (req, res) => {
-    res.send('<h1>API da Garagem Inteligente Conectada está no ar!</h1>');
-});
-
-// Iniciando o servidor
-app.listen(PORT, () => {
-    console.log(`Servidor da Garagem Inteligente rodando em http://localhost:${PORT}`);
-});
+// --- INICIALIZAÇÃO DO SERVIDOR ---
+// Primeiro conecta ao DB, depois inicia o servidor Express
+connectToDb().then(() => {
+    app.listen(PORT, () => {
+        console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
+        console.log('----------------------------------------------------');
+        console.log('IMPORTANTE: Acesse http://localhost:3001/api/seed UMA VEZ para popular o banco de dados.');
+        console.log('----------------------------------------------------');
+    });
+}).catch(console.error);
