@@ -1,22 +1,20 @@
-// server.js (Ordem de execução corrigida)
+// server.js
 
 // --- 1. Importações ---
 import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
-import dotenv from 'dotenv'; // dotenv precisa ser importado
+import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import Veiculo from "./models/veiculo.js"; 
+import Veiculo from "./models/veiculo.js";
 
 // --- 2. Configuração de Variáveis de Ambiente ---
-// GARANTA QUE ESTA LINHA SEJA EXECUTADA IMEDIATAMENTE APÓS AS IMPORTAÇÕES!
-dotenv.config(); 
+dotenv.config();
 
 // --- 3. Constantes e Configuração Inicial ---
 const app = express();
 const PORT = process.env.PORT || 3001;
-// Esta linha agora vai ler a variável DEPOIS que o dotenv.config() já rodou.
-const mongoUrl = process.env.DATABASE_URL; 
+const mongoUrl = process.env.DATABASE_URL;
 
 // --- 4. Middlewares ---
 app.use(cors());
@@ -24,10 +22,9 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // --- 5. Conexão com o Banco de Dados (via Mongoose) ---
-// Verifica se a mongoUrl foi carregada antes de tentar conectar
 if (!mongoUrl) {
     console.error("❌ ERRO: A variável de ambiente DATABASE_URL não foi encontrada. Verifique seu arquivo .env.");
-    process.exit(1); // Encerra o processo se a URL do DB não estiver disponível
+    process.exit(1);
 }
 
 mongoose.connect(mongoUrl)
@@ -41,15 +38,6 @@ mongoose.connect(mongoUrl)
     console.error('❌ Erro ao conectar com o MongoDB Atlas:', error.message);
     process.exit(1);
   });
-// --- 5. Endpoints (Rotas da API) ---
-
-/**
- * Rota Principal (Boas-vindas)
- */
-app.get('/', (req, res) => {
-    res.send('<h1>API da Garagem Inteligente Conectada está no ar!</h1>');
-});
-
 
 // --- ENDPOINTS CRUD PARA VEÍCULOS ---
 
@@ -118,30 +106,37 @@ app.get('/api/veiculos/:id', async (req, res) => {
 });
 
 /**
- * [UPDATE] PUT /api/veiculos/:id
+ * [UPDATE] PUT /api/veiculos/:id (NOVO)
  * Endpoint para atualizar um veículo existente pelo seu _id.
  */
 app.put('/api/veiculos/:id', async (req, res) => {
     try {
+        // Pega o ID da URL e os dados do corpo da requisição
         const { id } = req.params;
         const veiculoAtualizadoData = req.body;
 
+        // Encontra o veículo pelo ID e o atualiza com os novos dados
         const veiculoAtualizado = await Veiculo.findByIdAndUpdate(
             id, 
             veiculoAtualizadoData, 
-            { new: true, runValidators: true } // Opções importantes!
+            // Opções importantes:
+            // { new: true } -> Retorna o documento já atualizado.
+            // { runValidators: true } -> Garante que as regras do Schema (ex: required) sejam aplicadas na atualização.
+            { new: true, runValidators: true } 
         );
 
+        // Se o findByIdAndUpdate não encontrar o veículo, ele retorna null
         if (!veiculoAtualizado) {
             return res.status(404).json({ error: 'Veículo não encontrado para atualização.' });
         }
 
         console.log(`[Servidor] Veículo atualizado: ${id}`);
-        res.status(200).json(veiculoAtualizado);
+        res.status(200).json(veiculoAtualizado); // Retorna o veículo com os dados novos
 
     } catch (error) {
         console.error(`[Servidor] Erro ao atualizar veículo ${req.params.id}:`, error);
-        // Reutiliza a mesma lógica de tratamento de erro do POST
+        
+        // Tratamento de erros de validação (ex: placa duplicada)
         if (error.code === 11000) {
             return res.status(409).json({ error: 'Veículo com esta placa já existe.' });
         }
@@ -154,20 +149,24 @@ app.put('/api/veiculos/:id', async (req, res) => {
 });
 
 /**
- * [DELETE] DELETE /api/veiculos/:id
+ * [DELETE] DELETE /api/veiculos/:id (NOVO)
  * Endpoint para remover um veículo pelo seu _id.
  */
 app.delete('/api/veiculos/:id', async (req, res) => {
     try {
+        // Pega o ID da URL
         const { id } = req.params;
+        // Encontra o veículo pelo ID e o remove da coleção
         const veiculoRemovido = await Veiculo.findByIdAndDelete(id);
 
+        // Se o findByIdAndDelete não encontrar o veículo, ele retorna null
         if (!veiculoRemovido) {
             return res.status(404).json({ error: 'Veículo não encontrado para remoção.' });
         }
 
         console.log(`[Servidor] Veículo removido: ${id}`);
-        res.status(200).json({ message: 'Veículo removido com sucesso.' });
+        // Retorna uma mensagem de sucesso
+        res.status(200).json({ message: 'Veículo removido com sucesso.' }); 
         
     } catch (error) {
         console.error(`[Servidor] Erro ao remover veículo ${req.params.id}:`, error);
@@ -175,10 +174,8 @@ app.delete('/api/veiculos/:id', async (req, res) => {
     }
 });
 
-
 // --- ROTA PROXY PARA API DE CLIMA (sem alterações) ---
 app.get('/api/previsao/:cidade', async (req, res) => {
-    // ... (código da API de clima permanece o mesmo)
     const { cidade } = req.params;
     const apiKey = process.env.OPENWEATHER_API_KEY;
 
