@@ -1,0 +1,26 @@
+{
+  "name": "garagem-inteligente-backend",
+  "version": "1.0.0",
+  "description": "Backend para Garagem Inteligente",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "mongodb": "^6.17.0",
+    "mongoose": "^8.16.2",
+    "mongose": "^0.0.2-security"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  }
+}
