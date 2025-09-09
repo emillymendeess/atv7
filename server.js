@@ -6,7 +6,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import Veiculo from './models/veiculo.js';
-import Manutencao from './models/manutencao.js';
+
 
 // --- 2. Configuração de Variáveis de Ambiente ---
 dotenv.config();
