@@ -1,4 +1,4 @@
-// server.js - VERSÃO CORRIGIDA E LIMPA
+// server.js - VERSÃO COMPLETA E CORRIGIDA
 
 import express from 'express';
 import cors from 'cors';
@@ -17,21 +17,19 @@ dotenv.config();
 
 // --- Constantes e Configuração Inicial ---
 const app = express();
-const PORT = process.env.PORT || 3001; // Vai usar a porta 3001 do seu .env
+const PORT = process.env.PORT || 3001;
 const mongoUrl = process.env.DATABASE_URL;
 const JWT_SECRET = process.env.JWT_SECRET || 'seu_segredo_super_secreto_para_desenvolvimento';
 
 // --- Middlewares ---
 app.use(cors());
 app.use(express.json());
-// <<< IMPORTANTE: Serve os arquivos da pasta 'public'
-app.use(express.static('public')); 
+app.use(express.static('public'));
 
 // --- Conexão com o Banco de Dados e Inicialização do Servidor ---
 mongoose.connect(mongoUrl)
   .then(() => {
     console.log('✅ Conectado com sucesso ao MongoDB Atlas via Mongoose!');
-    // O SERVIDOR SÓ COMEÇA A "ESCUTAR" DEPOIS QUE A CONEXÃO DÁ CERTO.
     app.listen(PORT, () => {
         console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
     });
@@ -45,7 +43,6 @@ mongoose.connect(mongoUrl)
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-
     if (token == null) return res.sendStatus(401);
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
@@ -83,12 +80,10 @@ app.post('/api/auth/login', async (req, res) => {
         if (!user) {
             return res.status(401).json({ error: 'Credenciais inválidas.' });
         }
-
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({ error: 'Credenciais inválidas.' });
         }
-
         const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '8h' });
         res.json({ message: 'Login bem-sucedido!', token });
     } catch (error) {
@@ -112,7 +107,12 @@ app.post('/api/veiculos', authenticateToken, async (req, res) => {
 // [READ ALL] GET /api/veiculos
 app.get('/api/veiculos', authenticateToken, async (req, res) => {
     try {
-        const veiculos = await Veiculo.find({ owner: req.user.id });
+        const veiculos = await Veiculo.find({
+            $or: [
+                { owner: req.user.id },
+                { sharedWith: req.user.id }
+            ]
+        }).populate('owner', 'email');
         res.status(200).json(veiculos);
     } catch (error) {
         res.status(500).json({ error: 'Erro interno ao buscar veículos.' });
@@ -135,23 +135,53 @@ app.delete('/api/veiculos/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// [SHARE] POST /api/veiculos/:veiculoId/share
+app.post('/api/veiculos/:veiculoId/share', authenticateToken, async (req, res) => {
+    try {
+        const { veiculoId } = req.params;
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ error: 'O e-mail do destinatário é obrigatório.' });
+        }
+        const veiculo = await Veiculo.findById(veiculoId);
+        if (!veiculo) {
+            return res.status(404).json({ error: 'Veículo não encontrado.' });
+        }
+        if (veiculo.owner.toString() !== req.user.id) {
+            return res.status(403).json({ error: 'Ação não permitida. Você não é o proprietário deste veículo.' });
+        }
+        const userToShareWith = await User.findOne({ email });
+        if (!userToShareWith) {
+            return res.status(404).json({ error: `Usuário com o e-mail '${email}' não encontrado.` });
+        }
+        if (userToShareWith._id.toString() === req.user.id) {
+            return res.status(400).json({ error: 'Você não pode compartilhar um veículo com você mesmo.' });
+        }
+        await Veiculo.updateOne(
+            { _id: veiculoId },
+            { $addToSet: { sharedWith: userToShareWith._id } }
+        );
+        res.status(200).json({ message: `Veículo compartilhado com sucesso com ${email}.` });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro interno ao compartilhar veículo.', details: error.message });
+    }
+});
 
-// --- ENDPOINTS CRUD PARA MANUTENÇÕES ---
+
+// --- ENDPOINTS CRUD PARA MANUTENÇÕES (VERSÃO SEGURA) ---
 
 // [CREATE] POST /api/veiculos/:veiculoId/manutencoes
 app.post('/api/veiculos/:veiculoId/manutencoes', authenticateToken, async (req, res) => {
     try {
         const { veiculoId } = req.params;
-        // Validação para garantir que o usuário só adicione manutenção a um veículo que lhe pertence
-        const veiculo = await Veiculo.findOne({ _id: veiculoId, owner: req.user.id });
-        if (!veiculo) {
-            return res.status(404).json({ error: 'Veículo não encontrado ou não autorizado.' });
-        }
-
-        const novaManutencao = await Manutencao.create({
-            ...req.body,
-            veiculo: veiculoId
+        const veiculo = await Veiculo.findOne({
+            _id: veiculoId,
+            $or: [{ owner: req.user.id }, { sharedWith: req.user.id }]
         });
+        if (!veiculo) {
+            return res.status(403).json({ error: 'Acesso negado. O veículo não foi encontrado ou você não tem permissão.' });
+        }
+        const novaManutencao = await Manutencao.create({ ...req.body, veiculo: veiculoId });
         res.status(201).json(novaManutencao);
     } catch (error) {
         res.status(500).json({ error: 'Erro interno ao registrar manutenção.' });
@@ -162,11 +192,13 @@ app.post('/api/veiculos/:veiculoId/manutencoes', authenticateToken, async (req, 
 app.get('/api/veiculos/:veiculoId/manutencoes', authenticateToken, async (req, res) => {
     try {
         const { veiculoId } = req.params;
-        const veiculo = await Veiculo.findOne({ _id: veiculoId, owner: req.user.id });
+        const veiculo = await Veiculo.findOne({
+            _id: veiculoId,
+            $or: [{ owner: req.user.id }, { sharedWith: req.user.id }]
+        });
         if (!veiculo) {
-            return res.status(404).json({ error: 'Veículo não encontrado ou não autorizado.' });
+            return res.status(403).json({ error: 'Acesso negado. O veículo não foi encontrado ou você não tem permissão.' });
         }
-        
         const historico = await Manutencao.find({ veiculo: veiculoId }).sort({ data: -1 });
         res.status(200).json(historico);
     } catch (error) {

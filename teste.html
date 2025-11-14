@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garagem Inteligente Conectada</title>
+
+    <!-- CSS e Fontes Externas -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1><i class="fas fa-warehouse"></i> Garagem Inteligente Conectada</h1>
+
+    <div id="notificacoes"></div>
+
+    <!-- ===================================================== -->
+    <!--      SEÇÃO DE AUTENTICAÇÃO (PARA VISITANTES)          -->
+    <!-- ===================================================== -->
+    <div id="auth-section">
+        <h1>Bem-vindo à Garagem Inteligente Conectada</h1>
+        <p>Faça login ou registre-se para gerenciar seus veículos.</p>
+
+        <hr>
+
+        <!-- Formulário de Login -->
+        <div id="login-container">
+            <h2>Login</h2>
+            <input type="email" id="loginEmail" placeholder="seu-email@exemplo.com" required>
+            <input type="password" id="loginPassword" placeholder="Sua Senha" required>
+            <button id="loginButton">Entrar</button>
+            <p id="login-feedback"></p>
+        </div>
+
+        <hr>
+
+        <!-- Formulário de Registro -->
+        <div id="register-container">
+            <h2>Novo por aqui? Registre-se!</h2>
+            <input type="email" id="registerEmail" placeholder="seu-email@exemplo.com" required>
+            <input type="password" id="registerPassword" placeholder="Crie uma Senha" required>
+            <button id="registerButton">Registrar</button>
+            <p id="register-feedback"></p>
+        </div>
+    </div>
+
+    <!-- ===================================================== -->
+    <!--      SEÇÃO DA GARAGEM (PARA USUÁRIOS LOGADOS)         -->
+    <!-- ===================================================== -->
+    <div id="garage-section" class="hidden"> <!-- Começa escondida com uma classe CSS -->
+        <header>
+            <h1>Sua Garagem Inteligente</h1>
+            <button id="logoutButton">Sair (Logout)</button>
+        </header>
+
+
+        <!-- Seção para Adicionar Veículo -->
+        <!-- Seção para Adicionar Veículo ATUALIZADA -->
+        <div class="form-section">
+            <h3><i class="fas fa-plus-circle"></i> Adicionar Novo Veículo</h3>
+            <form id="formAdicionarVeiculo">
+                <!-- Campos Obrigatórios para o Backend -->
+                <label for="placaVeiculo">Placa:</label>
+                <input type="text" id="placaVeiculo" placeholder="Ex: ABC1D23" required>
+
+                <label for="marcaVeiculo">Marca:</label>
+                <input type="text" id="marcaVeiculo" placeholder="Ex: Volkswagen, Ford" required>
+
+                <label for="modeloVeiculo">Modelo:</label>
+                <input type="text" id="modeloVeiculo" placeholder="Ex: Fusca, Mustang" required>
+
+                <label for="anoVeiculo">Ano:</label>
+                <input type="number" id="anoVeiculo" placeholder="Ex: 2023" required>
+
+                <!-- Campo Opcional -->
+                <label for="corVeiculo">Cor:</label>
+                <input type="text" id="corVeiculo" placeholder="Ex: Azul, Vermelho, Prata">
+
+                <button type="submit"><i class="fas fa-save"></i> Adicionar à Garagem</button>
+
+
+                <!-- Dentro do seu modal de detalhes do veículo em teste.html -->
+
+                <!-- ... (outras informações do veículo como placa, modelo, etc.) ... -->
+
+                <hr class="separator">
+            </form>
+        </div>
+
+        <!-- Dentro do seu modal de detalhes do veículo em teste.html -->
+
+        <!-- ... (outras informações do veículo como placa, modelo, etc.) ... -->
+
+
+        <!-- NOVA SEÇÃO PARA HISTÓRICO DE MANUTENÇÃO -->
+        <div class="secao-manutencao">
+            <h2><i class="fas fa-history"></i> Histórico de Manutenção</h2>
+
+            <!-- Mensagem para quando não houver histórico -->
+            <p id="semManutencoes" class="feedback-info" style="display: none;">Nenhum registro de manutenção
+                encontrado.
+            </p>
+
+            <!-- A lista será populada pelo JavaScript -->
+            <ul id="listaManutencoes" class="lista-historico">
+                <!-- Exemplo de como um item ficará (será gerado pelo JS):
+        <li>
+            <div>
+                <strong>Troca de óleo</strong> - <span>10/08/2025</span>
+            </div>
+            <div>
+                <span>R$ 250,00</span>
+                <button class="btn-remover-sm">Remover</button>
+            </div>
+        </li>
+        -->
+            </ul>
+        </div>
+
+        <!-- NOVA SEÇÃO PARA ADICIONAR MANUTENÇÃO -->
+        <div class="secao-manutencao">
+            <h2><i class="fas fa-plus-circle"></i> Adicionar Nova Manutenção</h2>
+            <form id="formAdicionarManutencao">
+                <div class="form-group">
+                    <label for="descricaoServico">Descrição do Serviço:</label>
+                    <input type="text" id="descricaoServico" required>
+                </div>
+                <div class="form-group">
+                    <label for="custoManutencao">Custo (R$):</label>
+                    <input type="number" id="custoManutencao" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="quilometragemManutencao">Quilometragem:</label>
+                    <input type="number" id="quilometragemManutencao" min="0">
+                </div>
+                <button type="submit" class="btn btn-acao">
+                    <i class="fas fa-save"></i> Salvar Manutenção
+                </button>
+            </form>
+            <p id="feedbackManutencao" class="mensagem-feedback"></p>
+        </div>
+
+        <!-- Seção da Garagem (Lista de Veículos) -->
+        <div class="list-section">
+            <h2><i class="fas fa-car-side"></i> Meus Veículos</h2>
+            <div id="listaVeiculos">
+                <p>Nenhum veículo na garagem. Adicione um acima!</p>
+            </div>
+        </div>
+
+        <!-- Seção de Agendamentos Futuros -->
+        <div class="list-section">
+            <h3><i class="fas fa-calendar-alt"></i> Agendamentos Futuros</h3>
+            <div id="listaAgendamentosFuturos">
+                <p>Nenhum agendamento futuro encontrado.</p>
+            </div>
+        </div>
+
+        <!-- Seção do Planejador de Viagem com Clima -->
+        <div class="form-section" id="planejador-viagem">
+            <h3><i class="fas fa-map-marked-alt"></i> Planejar Viagem com Clima</h3>
+            <label for="destino-viagem">Cidade de Destino:</label>
+            <input type="text" id="destino-viagem" placeholder="Digite o nome da cidade">
+            <button id="verificar-clima-btn"><i class="fas fa-cloud-sun"></i> Verificar Clima</button>
+
+            <div class="forecast-controls" id="forecast-interaction-controls" style="display: none;">
+                <div class="control-group">
+                    <label>Mostrar previsão para:</label>
+                    <div class="options" id="dias-filter-options">
+                        <button data-dias="1">Hoje</button>
+                        <button data-dias="3">3 Dias</button>
+                        <button data-dias="5" class="active">5 Dias</button>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <span class="highlight-options-title">Opções de Destaque:</span>
+                    <div class="options" id="highlight-filter-options">
+                        <label><input type="checkbox" id="destaque-chuva"> Destacar Chuva</label>
+                        <label><input type="checkbox" id="destaque-temp-baixa"> Temp. Baixa (<10°C)< /label>
+                                <label><input type="checkbox" id="destaque-temp-alta"> Temp. Alta (>30°C)</label>
+                    </div>
+                </div>
+            </div>
+            <div id="previsao-tempo-resultado" style="display: none;"></div>
+        </div>
+
+        <!-- Modal para Detalhes do Veículo e Manutenção -->
+        <!-- DENTRO DE <div id="modalDetalhesVeiculo" class="modal"> -> <div class="modal-content"> -->
+
+        <!-- ... (código do h2, info do veículo, etc., que já existem) ... -->
+
+        <!-- SEÇÃO PARA O HISTÓRICO DE MANUTENÇÃO (ATUALIZADA) -->
+        <div class="list-section">
+            <h3><i class="fas fa-tools"></i> Histórico de Manutenção</h3>
+            <!-- A lista de manutenções será inserida aqui pelo JavaScript -->
+            <div id="modalHistoricoManutencao">
+                <p>Carregando histórico...</p>
+            </div>
+        </div>
+
+        <!-- SEÇÃO PARA O FORMULÁRIO DE NOVA MANUTENÇÃO (NOVO) -->
+        <div class="form-section">
+            <h3><i class="fas fa-plus-square"></i> Registrar Nova Manutenção</h3>
+            <!-- Este formulário enviará os dados para a função 'adicionarManutencao' -->
+            <form id="formAdicionarManutencaoNoModal">
+                <!-- Input escondido para guardar o ID do veículo, facilitando o trabalho do JS -->
+                <input type="hidden" id="manutencaoVeiculoId">
+
+                <label for="manutencaoDescricao">Descrição do Serviço:</label>
+                <input type="text" id="manutencaoDescricao" placeholder="Ex: Troca de óleo e filtro" required>
+
+                <label for="manutencaoCusto">Custo (R$):</label>
+                <input type="number" id="manutencaoCusto" min="0" step="0.01" placeholder="Ex: 150.00" required>
+
+                <label for="manutencaoQuilometragem">Quilometragem (Opcional):</label>
+                <input type="number" id="manutencaoQuilometragem" min="0" placeholder="Ex: 50000">
+
+                <button type="submit"><i class="fas fa-save"></i> Salvar Manutenção</button>
+            </form>
+        </div>
+
+        <div id="modalEdicao" class="modal">
+            <div class="modal-content">
+                <!-- O 'x' para fechar o modal -->
+                <span class="close-button"
+                    onclick="document.getElementById('modalEdicao').style.display = 'none'">&times;</span>
+
+                <h3><i class="fas fa-edit"></i> Editar Veículo</h3>
+
+                <form id="formEditarVeiculo">
+                    <!-- Input escondido para guardar o ID do veículo que estamos editando -->
+                    <input type="hidden" id="editVeiculoId">
+
+                    <label for="editPlacaVeiculo">Placa:</label>
+                    <input type="text" id="editPlacaVeiculo" required>
+
+                    <label for="editMarcaVeiculo">Marca:</label>
+                    <input type="text" id="editMarcaVeiculo" required>
+
+                    <label for="editModeloVeiculo">Modelo:</label>
+                    <input type="text" id="editModeloVeiculo" required>
+
+                    <label for="editAnoVeiculo">Ano:</label>
+                    <input type="number" id="editAnoVeiculo" required>
+
+                    <label for="editCorVeiculo">Cor:</label>
+                    <input type="text" id="editCorVeiculo">
+
+                    <button type="submit"><i class="fas fa-save"></i> Salvar Alterações</button>
+                </form>
+
+                  <!-- Scripts JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+    
+    <!-- O script de autenticação vem PRIMEIRO -->
+    <script src="auth.js"></script> 
+    
+    <!-- Seu script principal vem DEPOIS -->
+    <script src="script.js"></script>
+</body>
+</html>
